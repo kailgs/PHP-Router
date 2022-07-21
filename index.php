@@ -1,5 +1,19 @@
 <?php
-$request = $_SERVER['REQUEST_URI'];
+require('router.php');
 
-echo $request;
+$router = new Router("/dpsg");
+
+$router->route('/', function() {
+
+});
+
+$router->route('/gruppen', function() {
+
+});
+
+$router->route('/kontakt', function() {
+
+});
+
+$router->printRoutes();
 ?>
