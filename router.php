@@ -73,7 +73,7 @@
             return $res;
         }
 
-        private static function extractParams($bUrl, $gUrl) 
+        private static function extractParams(string $bUrl, string $gUrl) 
         {
             $urls = self::decomposeUrls($bUrl, $gUrl);
             $params = array();
@@ -87,13 +87,44 @@
     }
 
     class Route {
+        // Route part => [part] = [TYPE, VALUE, REGEXP] where type in ["path", "var"] and REGEXP by default the empty string
+        public  array  $rParts;
         private string $route;
-        private array  $routeParts;
-        private string $basePath;
 
-        public function __construct(string $route)
+        public function __construct(string $route, string $basePath = "")
         {
-            
+            $this->route    = $basePath . $route;
+            $this->rParts   = $this->desconstructRoute($route);
+        }
+
+        private function desconstructRoute(string $route)
+        {
+            $res  = array();
+            foreach (array_values(array_filter(explode("/", $route), 'strlen')) as $i => $part) {
+                $type = str_starts_with($part, '{') ? 'var' : 'path';
+                $part = ($type == 'var') ? trim($part, '{}') : $part;
+                $res[$part] = [$type, $i];
+            }
+
+            return $res;
+        }
+
+        public function where($expressions, $regExp="") 
+        {
+            if (!is_array($expressions)) 
+                $expressions = array([$expressions => $regExp]);
+
+            foreach ($expressions as $expr) {
+                foreach ($this->rParts as $part) {
+                    
+                }
+            }
+
+        }
+
+        public function printRoute()
+        {
+            var_dump($this->route, $this->rParts);
         }
     }
 ?>
