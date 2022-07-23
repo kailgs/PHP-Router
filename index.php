@@ -6,10 +6,10 @@ include 'router.php';
 #echo preg_match('/^({[a-zA-Z_]+?:\(.*?\)})|(\(.*?\))$/', "()");
 #echo preg_match('/^{[a-zA-Z_]+?:\(.*?\)}$/', "{id:(/*.\/)}"); 
 
-$route = new Route("/gruppen/{id}/{test}", "/dpsg");
-$route->printRoute();
+#$route->where('id', '/[0-9]+/');
+#$route->where(['id' => '/[0-9]+/', 'test' => '/pepe/']);
+#$route->printRoute();
 
-Router::setBasePath('/dpsg');
 
 Router::route('/', function() {
     return "Das ist die Startseite!";
