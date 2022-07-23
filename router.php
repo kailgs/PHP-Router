@@ -1,45 +1,41 @@
 <?php
     class Router {
         // rootPath = base directory, routes = array of the routes
-        private string $rootPath;
-        private array  $routes;
+        private static string $rootPath;
+        private static array  $routes  = array();
         
         // url = without GET parameters, fullUrl = with GET parameters
-        private string $gUrl;
-        private string $fullUrl;
+        private static string $fullUrl;
+        private static string $gUrl; 
 
         // constructor only needs the root path, if its not the emtpy string
         public function __construct(string $rootPath = "") {
-            $this->rootPath = $rootPath;
-            $this->routes   = array();
+            self::$rootPath = $rootPath;
         }
 
         // adds a new route
-        public function route(string $route, callable $func) {
-            $this->routes[$this->rootPath.$route] = $func;
+        public static function route(string $route, callable $func) {
+            self::$routes[self::$rootPath.$route] = $func;
         }
 
         // reacts to the given route
-        public function run() {
-            $this->fullUrl = $_SERVER['REQUEST_URI'];
-            $this->setURL($this->fullUrl);
+        public static function run() {
+            // Store url
+            self::$fullUrl = $_SERVER['REQUEST_URI'];
+            self::$gUrl    = (str_contains(self::$fullUrl, '?')) ? explode('?', self::$fullUrl)[0] : self::$fullUrl;
 
-            foreach ($this->routes as $bRout => $func) {
-                if ($this->checkUrl($bRout, $this->gUrl)) {
-                    $params = $this->extractParams($bRout, $this->gUrl);
+            // Get right route
+            foreach (self::$routes as $bRout => $func) {
+                if (self::checkUrl($bRout, self::$gUrl)) {
+                    $params = self::extractParams($bRout, self::$gUrl);
                     call_user_func_array($func, $params);
                     break;
                 }
             }
         }
 
-        // stores the url without the get parameters
-        private function setURL($fullUrl) {
-            $this->gUrl = (str_contains($fullUrl, '?')) ? explode('?', $fullUrl)[0] : $fullUrl;
-        }
-
-        private function checkUrl($bRoute, $gRoute) {
-            if ( count(($urls = $this->decomposeUrls($bRoute, $gRoute))[0]) != count($urls[1]) ) {
+        private static function checkUrl($bRoute, $gRoute) {
+            if ( count(($urls = self::decomposeUrls($bRoute, $gRoute))[0]) != count($urls[1]) ) {
                 return false;
             }
 
@@ -52,7 +48,7 @@
             return true;
         }
 
-        public function decomposeUrls(...$urls) {
+        public static function decomposeUrls(...$urls) {
             $res = array();
             foreach ($urls as $url) {
                 $tmp = array();
@@ -63,8 +59,8 @@
             return $res;
         }
 
-        private function extractParams($bUrl, $gUrl) {
-            $urls = $this->decomposeUrls($bUrl, $gUrl);
+        private static function extractParams($bUrl, $gUrl) {
+            $urls = self::decomposeUrls($bUrl, $gUrl);
             $params = array();
             for ($i = 0; $i < count($urls[0]); $i++) { 
                 if (substr($urls[0][$i], 0, 1) == '{') {
