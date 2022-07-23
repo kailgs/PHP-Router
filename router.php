@@ -1,7 +1,7 @@
 <?php
     class Router {
         // rootPath = base directory, routes = array of the routes
-        private static string $rootPath;
+        private static string $basePath;
         private static array  $routes  = array();
         
         // url = without GET parameters, fullUrl = with GET parameters
@@ -9,17 +9,20 @@
         private static string $gUrl; 
 
         // constructor only needs the root path, if its not the emtpy string
-        public function __construct(string $rootPath = "") {
-            self::$rootPath = $rootPath;
+        public static function setBasePath(string $basePath = "") 
+        {
+            self::$basePath = $basePath;
         }
 
         // adds a new route
-        public static function route(string $route, callable $func) {
-            self::$routes[self::$rootPath.$route] = $func;
+        public static function route(string $route, callable $func) 
+        {
+            self::$routes[self::$basePath.$route] = $func;
         }
 
         // reacts to the given route
-        public static function run() {
+        public static function run() 
+        {
             // Store url
             self::$fullUrl = $_SERVER['REQUEST_URI'];
             self::$gUrl    = (str_contains(self::$fullUrl, '?')) ? explode('?', self::$fullUrl)[0] : self::$fullUrl;
@@ -28,27 +31,38 @@
             foreach (self::$routes as $bRout => $func) {
                 if (self::checkUrl($bRout, self::$gUrl)) {
                     $params = self::extractParams($bRout, self::$gUrl);
-                    call_user_func_array($func, $params);
+                    echo call_user_func_array($func, $params);
                     break;
                 }
             }
         }
 
-        private static function checkUrl($bRoute, $gRoute) {
+        // Compares a requested route with a saved route -> return true/false
+        private static function checkUrl($bRoute, $gRoute) 
+        {
             if ( count(($urls = self::decomposeUrls($bRoute, $gRoute))[0]) != count($urls[1]) ) {
                 return false;
             }
 
             for ($i = 0; $i < count($urls[0]); $i++) { 
-                if (substr($urls[0][$i], 0, 1) != '{' && $urls[0][$i] != $urls[1][$i]) {
+                if (!preg_match('/^{/', $urls[0][$i]) && $urls[0][$i] != $urls[1][$i]) {
                     return false;
+                }
+
+                // URL element is a variable and contains a regular expression
+                if ( ($withName = preg_match('/^{[a-zA-Z_]+?:\(.*?\)}$/', $urls[0][$i])) || preg_match('/^{\(.*?\)}$/', $urls[0][$i])) {
+                    $start = ($withName * strpos($urls[0][$i], ':')) + 2;
+                    $end   = strlen($urls[0][$i]) - 2;
+                    $expr  = substr($urls[0][$i], $start, ($end - $start));
+                    echo 'URL: ' . $urls[0][$i] . '<br>' . 'EXPR: ' . $expr . '<br>' . 'WITH NAME: ' . $withName . '<br>';
                 }
             }
             
             return true;
         }
 
-        public static function decomposeUrls(...$urls) {
+        public static function decomposeUrls(...$urls) 
+        {
             $res = array();
             foreach ($urls as $url) {
                 $tmp = array();
@@ -59,15 +73,27 @@
             return $res;
         }
 
-        private static function extractParams($bUrl, $gUrl) {
+        private static function extractParams($bUrl, $gUrl) 
+        {
             $urls = self::decomposeUrls($bUrl, $gUrl);
             $params = array();
             for ($i = 0; $i < count($urls[0]); $i++) { 
-                if (substr($urls[0][$i], 0, 1) == '{') {
+                if (preg_match('/^{.*/', $urls[0][$i])) {
                     array_push($params, $urls[1][$i]);
                 }
             }
             return $params;
+        }
+    }
+
+    class Route {
+        private string $route;
+        private array  $routeParts;
+        private string $basePath;
+
+        public function __construct(string $route)
+        {
+            
         }
     }
 ?>
