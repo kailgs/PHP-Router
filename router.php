@@ -3,9 +3,9 @@
         // rootPath = base directory, routes = array of the routes
         private static string $basePath = '';
         private static array  $routes  = array();
-        
         // url = without GET parameters, fullUrl = with GET parameters
         private static Route $url;
+        
 
         // constructor only needs the root path, if its not the emtpy string
         public static function setBasePath(string $basePath) 
@@ -16,16 +16,16 @@
         // adds a new route
         public static function route(string $route, callable $func) 
         {
-            array_push(self::$routes, [new Route($route, self::$basePath), $func]);
+            $nRoute = new Route($route, self::$basePath);
+            array_push(self::$routes, [$nRoute, $func]);
+            return $nRoute;
         }
 
         // reacts to the given route
         public static function run() 
         {
-            // Store url
             self::$url = new Route($_SERVER['REQUEST_URI']);
-
-            // Get right route
+            
             foreach (self::$routes as $route) {
                 if (Route::compareRoutes($route[0], self::$url)) {
                     $params = $route[0]->getParametersOf(self::$url);
@@ -44,7 +44,7 @@
         public function __construct(string $route, string $basePath = "")
         {
             $this->route    = $basePath . $route;
-            $this->rParts   = $this->desconstructRoute($route);
+            $this->rParts   = $this->desconstructRoute($this->route);
         }
 
         private function desconstructRoute(string $route)
@@ -67,37 +67,24 @@
             foreach ($values as $part => $regex) {
                 for ($i=0; $i < count($this->rParts); $i++) {
                     if ($part == $this->rParts[$i]["part"] && $this->rParts[$i]["type"] == 'var' ) {
-                        $this->rParts[$i]["regex"] = $regex;
+                        $this->rParts[$i]["regex"] = '/^' . $regex . '$/';
+                        // var_dump($this->rParts);
                         break;
                     }                
                 }
             }
+
+            return $this;
         }
 
-        // bRoute = base route = The route stored by dev --- gRoute = given route = The route entered by user
-        public static function compareRoutes(Route $bRoute, Route $gRoute)
-        {
-            if ($len = $bRoute->length() != $gRoute->length())
-                return false;
-
-            for ($i = 0; $i < $len; $i++) {
-                if ($bRoute[$i]["type"] == 'path' && $bRoute[$i]["value"] != $gRoute[$i]["value"])
-                    return false;
-
-                if ($bRoute[$i]["type"] == 'var' && $bRoute[$i]["regex"] != '' && !preg_match($bRoute[$i]["regex"], $gRoute[$i]["part"])) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
+        // Needs a route template and a user entered route
         public function getParametersOf(Route $gRoute) 
         {
             $params = array();
             for ($i=0; $i<$this->length(); $i++) {
-                if ($this->rParts[$i]["type"] == 'var')
-                    array_push($params, $gRoute[$i]["part"]);
+                if ($this->rParts[$i]["type"] == 'var') {
+                    array_push($params, $gRoute->rParts[$i]["part"]);
+                }
             }
             return $params;
         }
@@ -107,9 +94,23 @@
             return count($this->rParts);
         }
 
-        public function printRoute()
+        // tRoute = template route = The route stored by dev --- gRoute = given route = The route entered by user
+        public static function compareRoutes(Route $tRoute, Route $gRoute)
         {
-            var_dump($this->route, $this->rParts);
+            $len = $tRoute->length();
+            if ($len != $gRoute->length())
+                return false;
+            
+            for ($i = 0; $i < $len; $i++) {
+                if ($tRoute->rParts[$i]["type"] == 'path' && $tRoute->rParts[$i]["part"] != $gRoute->rParts[$i]["part"])
+                    return false;
+
+                if ($tRoute->rParts[$i]["type"] == 'var' && $tRoute->rParts[$i]["regex"] != '' && !preg_match($tRoute->rParts[$i]["regex"], $gRoute->rParts[$i]["part"])) {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 ?>
