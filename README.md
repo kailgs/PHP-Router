@@ -81,7 +81,3 @@ Router::route('/group/{id}/{count}', function($id, $count) {
     return "Group with ID: " . $id . " and count: " . $count;
 })->whereNumeric(['id', 'count']);
 ```
-
-
-```php
-```
