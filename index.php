@@ -20,6 +20,10 @@ Router::route('/user/{id}/{name}', function($id, $name) {
     return "<br>USER mit ID: " .$id . " und dem NAME: " . $name . "<br>";
 })->where(['id' => '[0-9]+', 'name' => '[a-z]+']);
 
+Router::route('/kategorie/{id}/{name}', function($id, $name) {
+    return "<br>KATEGORIE mit ID: " .$id . " und dem NAME: " . $name . "<br>";
+})->where('id', '[0-9]+')->where('name', '[a-z]+');
+
 Router::run();
 
 
