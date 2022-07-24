@@ -68,11 +68,44 @@
                 for ($i=0; $i < count($this->rParts); $i++) {
                     if ($part == $this->rParts[$i]["part"] && $this->rParts[$i]["type"] == 'var' ) {
                         $this->rParts[$i]["regex"] = '/^' . $regex . '$/';
-                        // var_dump($this->rParts);
                         break;
                     }                
                 }
             }
+
+            return $this;
+        }
+
+        public function whereNumeric($parameters) 
+        {
+            if (!is_array($parameters)) $parameters = array($parameters);            
+            foreach ($parameters as $parameter) {
+                $values[$parameter] = '[0-9]+';
+            }
+
+            $this->where($values);
+            
+            return $this;
+        }
+
+        public function whereAlpha($parameters)
+        {
+            if (!is_array($parameters)) $parameters = array($parameters);
+            foreach ($parameters as $parameter) {
+                $values[$parameter] = '[a-zA-Z]+';
+            }
+            $this->where($values);
+
+            return $this;
+        }
+
+        public function whereAlphaNumeric($parameters)
+        {
+            if (!is_array($parameters)) $parameters = array($parameters);
+            foreach ($parameters as $parameter) {
+                $values[$parameter] = '[a-zA-Z0-9]+';
+            }
+            $this->where($values);
 
             return $this;
         }

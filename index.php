@@ -7,10 +7,13 @@ Router::route('/', function() {
     return "Das ist die Startseite!";
 });
 
-Router::route('/gruppen/{id}/{test}', function($id, $pepe) {
-    echo "Das ist die Gruppenseite!<br>";
-    return "Mit der Nummer: ".$id." UND DAS IST: ". $pepe;
-});
+Router::route('/gruppen/{id}/{test}', function($id, $test) {
+    return "Gruppe mit der Nummer: ".$id." UND DAS IST: ". $test;
+})->whereNumeric('id')->whereAlphaNumeric('test');
+
+Router::route('/bestellungen/{bestellungID}/{kategorieID}', function($id, $kat) {
+    return "BestellID: ".$id." mit der Kategorie: ". $kat;
+})->whereNumeric(['bestellungID', 'kategorieID']);
 
 Router::route('/gruppen/{id}', function($id) {
     return "<br>GRUPPE mit ID: " .$id . "<br>";
