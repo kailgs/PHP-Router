@@ -37,7 +37,7 @@
     }
 
     class Route {
-        // Route part => [POS, TYPE, VALUE, REGEXP] where type in ["path", "var"] and REGEXP by default the empty string
+        // Route part => [POS, TYPE, VALUE, FILTERTYPE, LIST, REGEXP] where type in ["path", "var"] and REGEXP by default the empty string
         public  array  $rParts;
         private string $route;
 
@@ -53,7 +53,7 @@
             foreach (array_values(array_filter(explode("/", $route), 'strlen')) as $i => $part) {
                 $type = str_starts_with($part, '{') ? 'var' : 'path';
                 $part = ($type == 'var') ? trim($part, '{}') : $part;
-                array_push($res, ["pos" => $i, "type" => $type, "part" => $part, "regex" => '']);
+                array_push($res, ["pos" => $i, "type" => $type, "part" => $part, "filtertype" => "none", "list" => array(), "regex" => '']);
             }
 
             return $res;
@@ -67,12 +67,25 @@
             foreach ($values as $part => $regex) {
                 for ($i=0; $i < count($this->rParts); $i++) {
                     if ($part == $this->rParts[$i]["part"] && $this->rParts[$i]["type"] == 'var' ) {
+                        $this->rParts[$i]["filtertype"] = "regex";
                         $this->rParts[$i]["regex"] = '/^' . $regex . '$/';
                         break;
                     }                
                 }
             }
 
+            return $this;
+        }
+
+        public function whereIn($part, $values) {
+            for ($i=0; $i < count($this->rParts); $i++) {
+                if ($part == $this->rParts[$i]["part"] && $this->rParts[$i]["type"] == 'var' ) {
+                    $this->rParts[$i]["filtertype"] = "list";
+                    $this->rParts[$i]["list"] = $values;
+                    break;
+                }                
+            }
+            
             return $this;
         }
 
@@ -135,10 +148,17 @@
                 return false;
             
             for ($i = 0; $i < $len; $i++) {
-                if ($tRoute->rParts[$i]["type"] == 'path' && $tRoute->rParts[$i]["part"] != $gRoute->rParts[$i]["part"])
+                $tPart = $tRoute->rParts[$i];
+                $gPart = $gRoute->rParts[$i];
+                $isVar = ($tPart["type"] == 'var') ? 1 : 0;
+
+                if (!$isVar && $tPart["part"] != $gPart["part"])
                     return false;
 
-                if ($tRoute->rParts[$i]["type"] == 'var' && $tRoute->rParts[$i]["regex"] != '' && !preg_match($tRoute->rParts[$i]["regex"], $gRoute->rParts[$i]["part"])) {
+                if ($isVar && $tPart["filtertype"] == "list" && !in_array($gPart["part"], $tPart["list"]))
+                    return false;
+
+                if ($isVar && $tPart["filtertype"] == "regex" && !preg_match($tPart["regex"], $gPart["part"])) {
                     return false;
                 }
             }
