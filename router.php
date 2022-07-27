@@ -1,4 +1,11 @@
 <?php
+    function stringArrayToString($values) {
+        $res = "[";
+        for ($i = 1; $i < count($values); $i++)
+            $res .= $values[$i] . ", ";
+        return $res . end($values) . "]";
+    }
+
     class Router {
         // rootPath = base directory, routes = array of the routes
         private static string $basePath = '';
@@ -60,32 +67,44 @@
         }
 
         public function where($values, $regex="") 
-        {
+        {            
             if (!is_array($values)) 
                 $values = [$values => $regex];
-
+            
+            $setVariables = array();
+            $gotVariables = array();
             foreach ($values as $part => $regex) {
+                array_push($gotVariables, $part);
                 for ($i=0; $i < count($this->rParts); $i++) {
                     if ($part == $this->rParts[$i]["part"] && $this->rParts[$i]["type"] == 'var' ) {
                         $this->rParts[$i]["filtertype"] = "regex";
                         $this->rParts[$i]["regex"] = '/^' . $regex . '$/';
+                        array_push($setVariables, $part);
                         break;
                     }                
                 }
             }
 
+            if (count($setVariables) != count($values))
+                trigger_error("Error in route: <b>". $this->route . "</b>: Not all given route parts were found. Given: ". stringArrayToString($gotVariables) . ", Found " . stringArrayToString($setVariables), E_USER_WARNING);
+
             return $this;
         }
 
         public function whereIn($part, $values) {
+            $setVariable = false;
             for ($i=0; $i < count($this->rParts); $i++) {
                 if ($part == $this->rParts[$i]["part"] && $this->rParts[$i]["type"] == 'var' ) {
                     $this->rParts[$i]["filtertype"] = "list";
                     $this->rParts[$i]["list"] = $values;
+                    $setVariable = true;
                     break;
                 }                
             }
-            
+
+            if (!$setVariable)
+                trigger_error("Error in route: <b>". $this->route . "</b>: The specified route part was not found. Given part: '{$part}'", E_USER_WARNING);
+
             return $this;
         }
 
