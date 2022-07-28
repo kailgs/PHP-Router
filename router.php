@@ -9,8 +9,9 @@
     class Router {
         // basePath = base directory, routes = array of the routes
         private static string $basePath = '';
-        private static array  $routes  = array();
-        private static Route $url;
+        private static array  $routes   = array();
+        private static $fallback;
+        private static Route  $url;
 
         // Constructor only needs the root path, if its not the emtpy string
         public static function setBasePath(string $basePath) 
@@ -40,20 +41,15 @@
 
             // Handling 404
             http_response_code(404);
-            $lastRoute = end(self::$routes);
-            if ($lastRoute[0]->getRoute() == self::$basePath . "/404") {
-                echo $lastRoute[1]();
+            if (self::$fallback) {
+                echo call_user_func(self::$fallback);
             } else {
-                self::p_fallback();
+                echo "Page not found";
             }
         }
 
         public static function fallback(callable $func) {
-            self::route("/404", $func);
-        }
-
-        private static function p_fallback() {
-            echo "du dumme drecksau";
+            self::$fallback = $func;
         }
     }
 
