@@ -68,6 +68,7 @@ Router::route('/user/{id}/{name}', function($id, $name) {
 ->whereNumeric('id');
 ->whereAlpha('name');
 ->whereAlphaNumeric('username');
+->whereIn('type', ['type1', 'type2', 'type3']);
 ```
 
 Example:
@@ -80,4 +81,9 @@ Router::route('/group/{id}/{groupName}', function($id, $name) {
 Router::route('/group/{id}/{count}', function($id, $count) {
     return "Group with ID: " . $id . " and count: " . $count;
 })->whereNumeric(['id', 'count']);
+```
+```php
+Router::route('/sports/{category}', function($category) {
+    return "Sport: " . $category;
+})->whereIn('category', ['football', 'basketball', 'tennis', 'swimming');
 ```
