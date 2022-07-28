@@ -7,20 +7,18 @@
     }
 
     class Router {
-        // rootPath = base directory, routes = array of the routes
+        // basePath = base directory, routes = array of the routes
         private static string $basePath = '';
         private static array  $routes  = array();
-        // url = without GET parameters, fullUrl = with GET parameters
         private static Route $url;
-        
 
-        // constructor only needs the root path, if its not the emtpy string
+        // Constructor only needs the root path, if its not the emtpy string
         public static function setBasePath(string $basePath) 
         {
             self::$basePath = $basePath;
         }
 
-        // adds a new route
+        // Adds a new route
         public static function route(string $route, callable $func) 
         {
             $nRoute = new Route($route, self::$basePath);
@@ -28,18 +26,34 @@
             return $nRoute;
         }
 
-        // reacts to the given route
+        // Reacts to the given route
         public static function run() 
         {
             self::$url = new Route($_SERVER['REQUEST_URI']);
-            
             foreach (self::$routes as $route) {
                 if (Route::compareRoutes($route[0], self::$url)) {
                     $params = $route[0]->getParametersOf(self::$url);
                     echo call_user_func_array($route[1], $params);
-                    break;
+                    return;
                 }
             }
+
+            // Handling 404
+            http_response_code(404);
+            $lastRoute = end(self::$routes);
+            if ($lastRoute[0]->getRoute() == self::$basePath . "/404") {
+                echo $lastRoute[1]();
+            } else {
+                self::p_fallback();
+            }
+        }
+
+        public static function fallback(callable $func) {
+            self::route("/404", $func);
+        }
+
+        private static function p_fallback() {
+            echo "du dumme drecksau";
         }
     }
 
@@ -183,6 +197,10 @@
             }
 
             return true;
+        }
+
+        public function getRoute() {
+            return $this->route;
         }
     }
 ?>
