@@ -16,8 +16,12 @@ Router::route('/bestellungen/{bestellungID}/{kategorieID}', function($id, $kat) 
 })->whereNumeric(['bestellungID', 'kategorieID']);
 
 Router::route('/gruppen/{id}', function($id) {
-    return "<br>GRUPPE mit ID: " .$id . "<br>";
+    return "GRUPPE mit ID: " .$id . "<br>";
 })->where('id', '[0-9]+');
+
+Router::route('/categories/{catName}', function($name) {
+    return "Category with the name: " . $name;
+})->whereIn('catName', ['affe', 'katze', 'maus']);
 
 Router::route('/user/{id}/{name}', function($id, $name) {
     return "<br>USER mit ID: " .$id . " und dem NAME: " . $name . "<br>";
