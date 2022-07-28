@@ -87,3 +87,15 @@ Router::route('/sports/{category}', function($category) {
     return "Sport: " . $category;
 })->whereIn('category', ['football', 'basketball', 'tennis', 'swimming');
 ```
+
+### Handling 404
+- If no route could be found, an 404 response will be sent to the client.
+- You can override what will be shown by an 404 error via the Router::fallback(callable $func) function:
+```php
+Router::fallback(function () {
+    // ----
+    // Do stuff
+    // ----
+    return "Sorry, this page does not exist";
+});
+```
