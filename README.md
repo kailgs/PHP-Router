@@ -68,6 +68,7 @@ Router::route('/user/{id}/{name}', function($id, $name) {
 ->whereNumeric('id');
 ->whereAlpha('name');
 ->whereAlphaNumeric('username');
+->whereIn('type', ['type1', 'type2', 'type3']);
 ```
 
 Example:
