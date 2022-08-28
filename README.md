@@ -63,6 +63,14 @@ Router::route('/user/{id}/{name}', function($id, $name) {
 })->where('id', '[0-9]+')->where('name', '[a-z]+']);
 ```
 
+- Specifiy a length for a part
+```php
+Router::route('/share/{hashcode}', function($hashcode) {
+    return "$hashcode";
+})->whereLength('hashcode', 64);
+```
+
+
 ### Predefined regular expressions
 ```php
 ->whereNumeric('id');
