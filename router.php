@@ -10,8 +10,8 @@
         // basePath = base directory, routes = array of the routes
         private static string $basePath = '';
         private static array  $routes   = array();
-        private static $fallback;
         private static Route  $url;
+        private static $fallback;
 
         // Constructor only needs the root path, if its not the emtpy string
         public static function setBasePath(string $basePath) 
@@ -54,7 +54,7 @@
     }
 
     class Route {
-        // Route part => [POS, TYPE, VALUE, FILTERTYPE, LIST, REGEXP] where type in ["path", "var"] and REGEXP by default the empty string
+        // Route part => [pos, type, value, filtertype, list, regexp, flength] where type in ["path", "var"] and REGEXP by default the empty string
         public  array  $rParts;
         private string $route;
 
@@ -89,6 +89,31 @@
                     if ($part == $this->rParts[$i]["part"] && $this->rParts[$i]["type"] == 'var' ) {
                         $this->rParts[$i]["filtertype"] = "regex";
                         $this->rParts[$i]["regex"] = '/^' . $regex . '$/';
+                        array_push($setVariables, $part);
+                        break;
+                    }                
+                }
+            }
+
+            if (count($setVariables) != count($values))
+                trigger_error("Error in route: <b>". $this->route . "</b>: Not all given route parts were found. Given: ". stringArrayToString($gotVariables) . ", Found " . stringArrayToString($setVariables), E_USER_WARNING);
+
+            return $this;
+        }
+
+        public function whereLength($values, $length=64)
+        {
+            if (!is_array($values)) 
+                $values = [$values => $length];
+            
+            $setVariables = array();
+            $gotVariables = array();
+            foreach ($values as $part => $length) {
+                array_push($gotVariables, $part);
+                for ($i=0; $i < count($this->rParts); $i++) {
+                    if ($part == $this->rParts[$i]["part"] && $this->rParts[$i]["type"] == 'var' ) {
+                        $this->rParts[$i]["filtertype"] = "length";
+                        $this->rParts[$i]["fLength"] = $length;
                         array_push($setVariables, $part);
                         break;
                     }                
@@ -169,9 +194,11 @@
             return count($this->rParts);
         }
 
-        // tRoute = template route = The route stored by dev --- gRoute = given route = The route entered by user
         public static function compareRoutes(Route $tRoute, Route $gRoute)
         {
+            // tRoute = template route = The route stored by dev 
+            // gRoute = given route = The route entered by user
+
             $len = $tRoute->length();
             if ($len != $gRoute->length())
                 return false;
@@ -187,9 +214,11 @@
                 if ($isVar && $tPart["filtertype"] == "list" && !in_array($gPart["part"], $tPart["list"]))
                     return false;
 
-                if ($isVar && $tPart["filtertype"] == "regex" && !preg_match($tPart["regex"], $gPart["part"])) {
+                if ($isVar && $tPart["filtertype"] == "regex" && !preg_match($tPart["regex"], $gPart["part"]))
                     return false;
-                }
+
+                if ($isVar && $tPart["filtertype"] == "length" && strlen($gPart["part"]) !== $tPart["fLength"])
+                    return false;
             }
 
             return true;
